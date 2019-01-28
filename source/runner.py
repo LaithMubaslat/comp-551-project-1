@@ -29,6 +29,13 @@ def compute_comment_features(comment):
     # is_root encoding
     comment['is_root'] = 0 if comment['is_root'] is False else 1
 
+    # other feature ideas:
+    # bigram count (use NLTK)
+    # comment length
+    # interaction features: combinations of is_root, controversiality, children, and comment length
+
+
+
     return comment
 
 
