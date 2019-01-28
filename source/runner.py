@@ -59,7 +59,7 @@ def preprocess_routine(comment):
 
 if __name__ == "__main__":
 
-    with open("proj1_data.json") as fp:
+    with open("./data/proj1_data.json") as fp:
         data = json.load(fp)
 
     # STEP0: preprocess data
