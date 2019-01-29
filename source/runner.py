@@ -5,7 +5,7 @@ import pandas
 import lin_reg_algs
 from collections import Counter
 
-
+# this is a new comment
 def strip_punctuation(s):
     s.translate(None, string.punctuation)
 
