@@ -23,10 +23,12 @@ def gradient_descent(X, y, W, beta, eta, epsilon):
     return W_new
 
          
+def ridge_regression(X,Y, lamb):
+    coefficients = np.dot(np.linalg.inv(np.dot(X.T,X)+np.diag(lamb*np.ones(123))),np.dot(X.T,Y))
+    return coefficients
 
 
-        
-            
+
             
 
 

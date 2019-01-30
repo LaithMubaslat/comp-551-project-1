@@ -1,9 +1,12 @@
+import nltk
 import numpy as np
 import string
 import json
 import pandas
 import lin_reg_algs
+import matplotlib.pyplot as plt
 from collections import Counter
+from sklearn import metrics
 
 # this is a new comment
 def strip_punctuation(s):
@@ -17,6 +20,7 @@ def flatten_list_of_lists(l):
 
 
 most_common_words = []
+most_common_bigrams = []
 def compute_comment_features(comment):
 
     # word count feature
@@ -29,12 +33,20 @@ def compute_comment_features(comment):
     # is_root encoding
     comment['is_root'] = 0 if comment['is_root'] is False else 1
 
+    # comment length feature
+    comment['length'] = len(comment)
+
+    # most common bigrams feature: this needs a bit more work tbh
+    # bi_grams = nltk.collocations.BigramCollocationFinder.from_words(comment)
+    # bi_count = []
+    # for bi_gram, count in most_common_bigrams[:160]:
+    #     bi_count.append(bi_grams[bi_gram])
+    # comment['bi_count'] = bi_count
+
     # other feature ideas:
     # bigram count (use NLTK)
     # comment length
     # interaction features: combinations of is_root, controversiality, children, and comment length
-
-
 
     return comment
 
@@ -46,7 +58,7 @@ def create_X_y(data):
     X_x_count = pandas.DataFrame(X_base.x_count.tolist())
     X_base = X_base.drop('x_count', axis=1)
 
-    X_bias =pandas.DataFrame(np.ones(shape=len(data)))
+    X_bias = pandas.DataFrame({'bias': np.ones(shape=len(data))})
 
     X = pandas.concat([X_base, X_x_count, X_bias], axis=1)
     y = np.array([comment['popularity_score'] for comment in data])
@@ -80,14 +92,40 @@ if __name__ == "__main__":
     test = data[validation_len + training_len:len(data)]
 
     most_common_words = count_most_common_words(train)
+    # most_common_bigrams = count_most_common_bigrams(train)
 
     X_train, y_train = create_X_y(train)
     X_validate, y_validate = create_X_y(validate)
     X_test, y_test = create_X_y(test)
 
-    # lin_reg_algs.closed_form(X_train, y_train)
-    # lin_reg_algs.gradient_descent(X_train, y_train, beta='', eta='', epsilon='')
+    W_train = lin_reg_algs.closed_form(X_train, y_train)
+    W_val = lin_reg_algs.closed_form(X_validate, y_validate)
 
+    y_train_results = np.array(X_train.dot(W_train))
+    y_val_results = np.array(X_validate.dot(W_val))
+
+    print('train: ' + str(metrics.mean_squared_error(y_train, y_train_results)))
+    print('validation: ' + str(metrics.mean_squared_error(y_validate, y_val_results)))
+
+    # lin_reg_algs.gradient_descent(X_train, y_train, beta='', eta='', epsilon='')
+    # lin_reg_algs.ridge_regression(X_train, y_train, lamb=0.01)
+
+
+
+
+    # fig = plt.figure()
+    # ax = fig.add_subplot(1, 1, 1)
+    # ax.scatter(range(len(y_train)), y_train, c='red', label='train')
+    # ax.scatter(range(len(y_results)), y_results, c='blue', label='predicted')
+    # plt.legend(loc=2)
+    # plt.show()
+
+    # test, report mean squared error
+    # F1 score, ROC curve, confusion matrix?
+
+    # runtime, stability (For gradient descent make sure you try out different learning rates and
+    # initializations! (And note that the learning rate might need to be very small...)
+    # accuracy, plots (which plots?)
 
 
 
