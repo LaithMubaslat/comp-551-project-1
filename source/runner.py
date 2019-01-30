@@ -35,12 +35,15 @@ def compute_comment_features(comment):
     # comment length feature
     comment['length'] = len(comment)
 
-    # most common bigrams feature: this needs a bit more work tbh
-    # bi_grams = nltk.collocations.BigramCollocationFinder.from_words(comment)
-    # bi_count = []
-    # for bi_gram, count in most_common_bigrams[:160]:
-    #     bi_count.append(bi_grams[bi_gram])
-    # comment['bi_count'] = bi_count
+    # most common bigrams feature:
+    # currently produced a Singular X matrix, since not every common bigram will be present in the text
+    # need to bias/smooth this feature
+    comment_bigrams = list(nltk.collocations.BigramCollocationFinder.from_words(comment['text']).ngram_fd)
+    bi_count = []
+    for candidate_bigram in most_common_bigrams:
+        count = comment_bigrams.count(candidate_bigram)
+        bi_count.append(count)
+    comment['bi_count'] = bi_count
 
     # other feature ideas:
     # bigram count (use NLTK)
@@ -52,10 +55,14 @@ def compute_comment_features(comment):
 
 def create_X_y(data):
     features = [compute_comment_features(comment) for comment in data]
-    X_base = pandas.DataFrame(features, columns=['children', 'controversiality', 'is_root', 'x_count'])
+    X_base = pandas.DataFrame(features,
+                              columns=['children', 'controversiality', 'is_root', 'x_count', 'bi_count'])
 
     X_x_count = pandas.DataFrame(X_base.x_count.tolist())
     X_base = X_base.drop('x_count', axis=1)
+
+    X_bi_count = pandas.DataFrame(X_base.bi_count.tolist())
+    X_base = X_base.drop('bi_count', axis=1)
 
     X_bias = pandas.DataFrame({'bias': np.ones(shape=len(data))})
 
@@ -68,6 +75,12 @@ def count_most_common_words(data):
     comments_combined = flatten_list_of_lists([comment['text'] for comment in data])
     counter = Counter(comments_combined)
     return counter.most_common()
+
+
+def count_most_common_bigrams(data):
+    comments_combined = flatten_list_of_lists([comment['text'] for comment in data])
+    finder = nltk.collocations.BigramCollocationFinder.from_words(comments_combined)
+    return finder.nbest(nltk.BigramAssocMeasures.raw_freq, 160)
 
 
 def preprocess_routine(comment):
@@ -91,7 +104,7 @@ if __name__ == "__main__":
     test = data[validation_len + training_len:len(data)]
 
     most_common_words = count_most_common_words(train)
-    # most_common_bigrams = count_most_common_bigrams(train)
+    most_common_bigrams = count_most_common_bigrams(train)
 
     X_train, y_train = create_X_y(train)
     X_validate, y_validate = create_X_y(validate)

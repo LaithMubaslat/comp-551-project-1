@@ -9,7 +9,13 @@ Gradient descent
 train: 77.12106999970888
 validation: 175.91191223094637
 
-
+full feature set + comment length
+Closed form:
+train: 2.949772041297724
+validation: 2.2086018179874674
+Gradient descent
+train: 74.52379845778238
+validation: 240.64445256213872
 
 
 partial feature set tests:
