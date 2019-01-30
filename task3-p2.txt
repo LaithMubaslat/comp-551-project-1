@@ -1,0 +1,12 @@
+MSE
+full 160 words: 
+train: 1.0477763217987113
+validation: 0.7843362166094451
+
+60 words: 
+train: 1.060429141685383
+validation: 0.9196270063580609
+
+no word feature:
+train: 1.0846830709157251
+validation: 1.0195047390212957

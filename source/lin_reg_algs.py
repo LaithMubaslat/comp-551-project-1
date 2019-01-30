@@ -3,28 +3,28 @@ import numpy as np
 
 def closed_form(X, y):
     X_T_X = np.dot(X.T,X)
-    weights = np.dot(np.linalg.inv(X_T_X), np.dot(X.T, y))
-    return weights
+    w = np.dot(np.linalg.inv(X_T_X), np.dot(X.T, y))
+    return w
 
 
-def gradient_descent(X, y, W, beta, eta, epsilon):
+def gradient_descent(X, y, alpha=1e-6, epsilon=1e-6, iterations=1000):
+    w= np.random.rand(len(X.columns))
     X_T_X=np.dot(X.T,X)
-    W_old=W
+    w_old=w
+    i=0
     while (True):
-        alpha= eta / (1 + beta)
-        W_new=W_old-2*alpha*np.subtract(np.dot(X_T_X,W_old), np.dot(X.T, y))
+        i=i+1
+        w_new=w_old-2*alpha*np.subtract(np.dot(X_T_X,w_old), np.dot(X.T, y))
         #Stopping Criteria
-        if np.linalg.norm(np.subtract(W_new,W_old))<epsilon:
-            print ("Converged!")
+        if np.linalg.norm(np.subtract(w_new,w_old))<epsilon or i>iterations:
             break
         else:
-            W_new=W_old
-            beta= beta * 2 #multiply by any cst to get alpha very small approx 10^-7
-    return W_new
+            w_new=w_old
+    return w_new
 
          
-def ridge_regression(X,Y, lamb):
-    coefficients = np.dot(np.linalg.inv(np.dot(X.T,X)+np.diag(lamb*np.ones(123))),np.dot(X.T,Y))
+def ridge_regression(X, y, lamb):
+    coefficients = np.dot(np.linalg.inv(np.dot(X.T,X) + np.diag(lamb*np.ones(len(y)))), np.dot(X.T, y))
     return coefficients
 
 

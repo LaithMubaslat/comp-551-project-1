@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 from collections import Counter
 from sklearn import metrics
 
-# this is a new comment
 def strip_punctuation(s):
     s.translate(None, string.punctuation)
 
@@ -60,7 +59,7 @@ def create_X_y(data):
 
     X_bias = pandas.DataFrame({'bias': np.ones(shape=len(data))})
 
-    X = pandas.concat([X_base, X_x_count, X_bias], axis=1)
+    X = pandas.concat([X_bias, X_base, X_x_count], axis=1)
     y = np.array([comment['popularity_score'] for comment in data])
     return X, y
 
@@ -98,6 +97,9 @@ if __name__ == "__main__":
     X_validate, y_validate = create_X_y(validate)
     X_test, y_test = create_X_y(test)
 
+    # STEP 2: run linear regression algorithms
+
+    print('Closed form:')
     W_train = lin_reg_algs.closed_form(X_train, y_train)
     W_val = lin_reg_algs.closed_form(X_validate, y_validate)
 
@@ -107,25 +109,27 @@ if __name__ == "__main__":
     print('train: ' + str(metrics.mean_squared_error(y_train, y_train_results)))
     print('validation: ' + str(metrics.mean_squared_error(y_validate, y_val_results)))
 
-    # lin_reg_algs.gradient_descent(X_train, y_train, beta='', eta='', epsilon='')
-    # lin_reg_algs.ridge_regression(X_train, y_train, lamb=0.01)
+    print('Gradient descent')
+    alpha, epsilon, iterations = (1e-6, 1e-6, 10000)
+    W_train = lin_reg_algs.gradient_descent(X_train, y_train, alpha, epsilon, iterations)
+    W_val = lin_reg_algs.gradient_descent(X_validate, y_validate, alpha, epsilon, iterations)
 
+    y_train_results = np.array(X_train.dot(W_train))
+    y_val_results = np.array(X_validate.dot(W_val))
 
+    print('train: ' + str(metrics.mean_squared_error(y_train, y_train_results)))
+    print('validation: ' + str(metrics.mean_squared_error(y_validate, y_val_results)))
 
-
-    # fig = plt.figure()
-    # ax = fig.add_subplot(1, 1, 1)
-    # ax.scatter(range(len(y_train)), y_train, c='red', label='train')
-    # ax.scatter(range(len(y_results)), y_results, c='blue', label='predicted')
-    # plt.legend(loc=2)
-    # plt.show()
-
-    # test, report mean squared error
-    # F1 score, ROC curve, confusion matrix?
-
-    # runtime, stability (For gradient descent make sure you try out different learning rates and
-    # initializations! (And note that the learning rate might need to be very small...)
-    # accuracy, plots (which plots?)
+    # print('Ridge regression:')
+    # lamb = 0.5
+    # W_train = lin_reg_algs.ridge_regression(X_train, y_train, lamb)
+    # W_val = lin_reg_algs.ridge_regression(X_validate, y_validate, lamb)
+    #
+    # y_train_results = np.array(X_train.dot(W_train))
+    # y_val_results = np.array(X_validate.dot(W_val))
+    #
+    # print('train: ' + str(metrics.mean_squared_error(y_train, y_train_results)))
+    # print('validation: ' + str(metrics.mean_squared_error(y_validate, y_val_results)))
 
 
 
