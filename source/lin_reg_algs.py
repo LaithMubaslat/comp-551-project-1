@@ -19,7 +19,7 @@ def gradient_descent(X, y, alpha=1e-6, epsilon=1e-6, iterations=1000):
         if np.linalg.norm(np.subtract(w_new,w_old))<epsilon or i>iterations:
             break
         else:
-            w_new=w_old
+            w_old=w_new
     return w_new
 
          

@@ -1,4 +1,5 @@
 import nltk
+import re
 import numpy as np
 import string
 import json
@@ -7,16 +8,22 @@ import lin_reg_algs
 import matplotlib.pyplot as plt
 from collections import Counter
 from sklearn import metrics
+from sklearn.preprocessing import normalize
+from nltk.corpus import stopwords
 
 def strip_punctuation(s):
-    s.translate(None, string.punctuation)
+    regex = re.compile('[%s]' % re.escape(string.punctuation))
+    return regex.sub('', s)
+
+def remove_stopwords(word_list):
+    stops = set(stopwords.words('english'))
+    return [strip_punctuation(word) for word in word_list if word not in stops]
 
 def lower_split(s):
     return s.lower().split()
 
 def flatten_list_of_lists(l):
     return [item for sublist in l for item in sublist]
-
 
 most_common_words = []
 most_common_bigrams = []
@@ -33,22 +40,15 @@ def compute_comment_features(comment):
     comment['is_root'] = 0 if comment['is_root'] is False else 1
 
     # comment length feature
-    comment['length'] = len(comment)
+    comment['length'] = len(comment['text'])
 
-    # most common bigrams feature:
-    # currently produced a Singular X matrix, since not every common bigram will be present in the text
-    # need to bias/smooth this feature
-    comment_bigrams = list(nltk.collocations.BigramCollocationFinder.from_words(comment['text']).ngram_fd)
-    bi_count = []
+    # how many of the most common bigrams present in comment? feature
+    bigram_text = remove_stopwords(comment['text']) # to match the preprocessing done for bigrams
+    comment_bigrams = list(nltk.collocations.BigramCollocationFinder.from_words(bigram_text).ngram_fd)
+    count = 0
     for candidate_bigram in most_common_bigrams:
-        count = comment_bigrams.count(candidate_bigram)
-        bi_count.append(count)
-    comment['bi_count'] = bi_count
-
-    # other feature ideas:
-    # bigram count (use NLTK)
-    # comment length
-    # interaction features: combinations of is_root, controversiality, children, and comment length
+        count += comment_bigrams.count(candidate_bigram)
+    comment['bi_count'] = count
 
     return comment
 
@@ -56,13 +56,14 @@ def compute_comment_features(comment):
 def create_X_y(data):
     features = [compute_comment_features(comment) for comment in data]
     X_base = pandas.DataFrame(features,
-                              columns=['children', 'controversiality', 'is_root', 'x_count', 'bi_count'])
+                              columns=['children', 'controversiality', 'is_root', 'x_count', 'length', 'bi_count'])
 
     X_x_count = pandas.DataFrame(X_base.x_count.tolist())
     X_base = X_base.drop('x_count', axis=1)
 
-    X_bi_count = pandas.DataFrame(X_base.bi_count.tolist())
-    X_base = X_base.drop('bi_count', axis=1)
+    X_length = pandas.DataFrame(X_base.length)
+    X_length_norm = (X_length - X_length.mean()) / X_length.std()
+    X_base = X_base.drop('length', axis=1)
 
     X_bias = pandas.DataFrame({'bias': np.ones(shape=len(data))})
 
@@ -79,8 +80,9 @@ def count_most_common_words(data):
 
 def count_most_common_bigrams(data):
     comments_combined = flatten_list_of_lists([comment['text'] for comment in data])
+    comments_combined = remove_stopwords(comments_combined)
     finder = nltk.collocations.BigramCollocationFinder.from_words(comments_combined)
-    return finder.nbest(nltk.BigramAssocMeasures.raw_freq, 160)
+    return finder.nbest(nltk.BigramAssocMeasures.raw_freq, 1000)
 
 
 def preprocess_routine(comment):
@@ -113,22 +115,20 @@ if __name__ == "__main__":
     # STEP 2: run linear regression algorithms
 
     print('Closed form:')
-    W_train = lin_reg_algs.closed_form(X_train, y_train)
-    W_val = lin_reg_algs.closed_form(X_validate, y_validate)
+    W = lin_reg_algs.closed_form(X_train, y_train)
 
-    y_train_results = np.array(X_train.dot(W_train))
-    y_val_results = np.array(X_validate.dot(W_val))
+    y_train_results = np.array(X_train.dot(W))
+    y_val_results = np.array(X_validate.dot(W))
 
     print('train: ' + str(metrics.mean_squared_error(y_train, y_train_results)))
     print('validation: ' + str(metrics.mean_squared_error(y_validate, y_val_results)))
 
     print('Gradient descent')
     alpha, epsilon, iterations = (1e-6, 1e-6, 10000)
-    W_train = lin_reg_algs.gradient_descent(X_train, y_train, alpha, epsilon, iterations)
-    W_val = lin_reg_algs.gradient_descent(X_validate, y_validate, alpha, epsilon, iterations)
+    W = lin_reg_algs.gradient_descent(X_train, y_train, alpha, epsilon, iterations)
 
-    y_train_results = np.array(X_train.dot(W_train))
-    y_val_results = np.array(X_validate.dot(W_val))
+    y_train_results = np.array(X_train.dot(W))
+    y_val_results = np.array(X_validate.dot(W))
 
     print('train: ' + str(metrics.mean_squared_error(y_train, y_train_results)))
     print('validation: ' + str(metrics.mean_squared_error(y_validate, y_val_results)))

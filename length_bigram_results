@@ -1,0 +1,29 @@
+base feature set (children, is_root, controversiality, 160 words)
+
+Closed form:
+train: 1.0477763217987115
+validation: 0.9950693970669264
+Gradient descent
+train: 1.048432027727855
+validation: 0.9965944768124491
+
+
+base feature set + comment length
+
+Closed form:
+train: 1.0477762711825638
+validation: 0.9950449255159726
+Gradient descent
+train: 1.0507679968448662
+validation: 1.0069157946065503
+
+
+base feature set + popular bigrams
+
+Closed form:
+train: 1.0477323926667965
+validation: 0.996044978855222
+Gradient descent
+train: 1.0491354260536057
+validation: 0.9990042088758018
+
