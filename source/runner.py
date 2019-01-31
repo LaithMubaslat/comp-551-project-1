@@ -5,7 +5,7 @@ import string
 import json
 import pandas
 import lin_reg_algs
-import matplotlib.pyplot as plt
+import timeit
 from collections import Counter
 from sklearn import metrics
 from sklearn.preprocessing import normalize
@@ -32,7 +32,7 @@ def compute_comment_features(comment):
     # word count feature
     counter = Counter(comment['text'])
     x_count = []
-    for word, count in most_common_words[:160]:
+    for word, count in most_common_words[:60]:
         x_count.append(counter[word])
     comment['x_count'] = x_count
 
@@ -56,7 +56,7 @@ def compute_comment_features(comment):
 def create_X_y(data):
     features = [compute_comment_features(comment) for comment in data]
     X_base = pandas.DataFrame(features,
-                              columns=['children', 'controversiality', 'is_root', 'x_count', 'length', 'bi_count'])
+                              columns=['children', 'controversiality', 'is_root', 'x_count', 'length'])
 
     X_x_count = pandas.DataFrame(X_base.x_count.tolist())
     X_base = X_base.drop('x_count', axis=1)
@@ -115,7 +115,10 @@ if __name__ == "__main__":
     # STEP 2: run linear regression algorithms
 
     print('Closed form:')
+
+    start_time = timeit.default_timer()
     W = lin_reg_algs.closed_form(X_train, y_train)
+    print(timeit.default_timer() - start_time)
 
     y_train_results = np.array(X_train.dot(W))
     y_val_results = np.array(X_validate.dot(W))
@@ -123,9 +126,13 @@ if __name__ == "__main__":
     print('train: ' + str(metrics.mean_squared_error(y_train, y_train_results)))
     print('validation: ' + str(metrics.mean_squared_error(y_validate, y_val_results)))
 
+
     print('Gradient descent')
     alpha, epsilon, iterations = (1e-6, 1e-6, 10000)
+
+    start_time = timeit.default_timer()
     W = lin_reg_algs.gradient_descent(X_train, y_train, alpha, epsilon, iterations)
+    print(timeit.default_timer() - start_time)
 
     y_train_results = np.array(X_train.dot(W))
     y_val_results = np.array(X_validate.dot(W))

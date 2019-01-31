@@ -1,0 +1,20 @@
+base feature set (children, is_root, controversiality, 160 words)
+
+Closed form
+time: 0.040222609000920784
+Gradient descent
+time: 27.2169260519986
+
+no text features set
+
+Closed form
+time: 0.05025705499792821
+Gradient descent
+time: 2.9324671880021924
+
+base feature set [60 words instead of 160]
+
+Closed form
+time: 0.012801140001101885
+Gradient descent
+time: 13.361417488998995
